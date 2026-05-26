@@ -7,6 +7,28 @@ function TodoList({ todos, fetchTodos }) {
     fetchTodos();
   };
 
+  const editTodo = async(todo)=>{
+
+const updatedTitle = prompt(
+"Edit Todo",
+todo.title
+);
+
+if(updatedTitle){
+
+await api.put(
+`/todos/${todo.id}`,
+{
+title:updatedTitle
+}
+);
+
+fetchTodos();
+
+}
+
+};
+
   const completeTodo = async(id)=>{
     await api.patch(`/todos/${id}/complete`);
     fetchTodos();
@@ -20,30 +42,41 @@ function TodoList({ todos, fetchTodos }) {
         <div className="todo-item" key={todo.id}>
 
           <span
-            style={{
-              textDecoration:
-              todo.completed
-              ? "line-through"
-              : "none"
-            }}
-          >
-            {todo.title}
-          </span>
+className="todo-text"
+style={{
+   textDecoration:
+   todo.completed
+   ? "line-through"
+   : "none"
+}}
+>
+   {todo.title}
+</span>
 
-          <button
-            className="completeBtn"
-            onClick={()=>completeTodo(todo.id)}
-          >
-            Complete
-          </button>
+<div className="button-group">
 
-          <button
-            className="deleteBtn"
-            onClick={()=>deleteTodo(todo.id)}
-          >
-            Delete
-          </button>
+<button
+className="completeBtn"
+onClick={()=>completeTodo(todo.id)}
+> 
+Complete
+</button>
 
+<button
+className="editBtn"
+onClick={()=>editTodo(todo)}
+> 
+Edit
+</button>
+
+<button
+className="deleteBtn"
+onClick={()=>deleteTodo(todo.id)}
+> 
+Delete
+</button>
+
+</div>
         </div>
 
       ))}

@@ -124,7 +124,33 @@ def complete_todo(
 
     return item
 
+@app.put("/todos/{id}")
+def update_todo(
+    id:int,
+    todo:schemas.TodoCreate,
+    db:Session=Depends(get_db)
+):
 
+    item=db.query(
+        models.Todo
+    ).filter(
+        models.Todo.id==id
+    ).first()
+
+    if not item:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Todo not found"
+        )
+
+    item.title=todo.title
+
+    db.commit()
+
+    db.refresh(item)
+
+    return item
 
 @app.delete("/todos/{id}")
 def delete_todo(
