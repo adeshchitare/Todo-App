@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from schemas import PaginatedTodos
 
 from database import SessionLocal, engine
 import models
@@ -55,21 +56,38 @@ def create_todo(
 
 
 
-@app.get("/todos")
+@app.get("/todos", response_model=schemas.PaginatedTodos)
 def get_todos(
     page: int = 1,
     limit: int = 5,
+    search: str = "",
     db: Session = Depends(get_db)
 ):
 
     skip = (page - 1) * limit
 
-    todos = db.query(
-    models.Todo
-).order_by(models.Todo.id.asc()).offset(skip).limit(limit).all()
+    query = db.query(models.Todo)
 
-    return todos
+    if search:
+        query = query.filter(
+            models.Todo.title.ilike(f"%{search}%")
+        )
 
+    todos = query.order_by(
+        models.Todo.id.desc()
+    ).offset(skip).limit(limit).all()
+
+    total_count = query.count()
+
+    total_pages = (total_count + limit - 1) // limit
+
+    return {
+        "todos" : todos,
+        "total_count": total_count,
+        "current_page": page,
+        "total_pages": total_pages,
+        "page_size": limit
+    }
 
 
 @app.put("/todos/{id}")
@@ -93,8 +111,10 @@ def update_todo(
         )
 
     item.title = todo.title
+    item.completed = todo.completed
 
     db.commit()
+    db.refresh(item)
 
     return item
 

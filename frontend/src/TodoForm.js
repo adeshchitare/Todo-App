@@ -3,6 +3,7 @@ import {useState} from "react";
 function TodoForm({addTodo}){
 
 const [title,setTitle]=useState("");
+const [error, setError] = useState("")
 
 const submit=(e)=>{
 
@@ -10,13 +11,13 @@ e.preventDefault();
 
 if(title.trim()===""){
 
-alert("Please enter todo");
+setError("Please enter todo")
 
 return;
 }
 
-addTodo(title);
-
+setError("")
+addTodo(title)
 setTitle("");
 
 };
@@ -33,6 +34,9 @@ onChange={(e)=>setTitle(
 e.target.value
 )}
 />
+
+{error && <p style={{ color: "red"}}
+>{error}</p>}
 
 <button className="addBtn">
 Add

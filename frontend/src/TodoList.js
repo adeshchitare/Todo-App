@@ -1,88 +1,186 @@
 import api from "./api";
+import { useState } from "react";
 
-function TodoList({ todos, fetchTodos }) {
+function TodoList({ todos, fetchTodos, search, setSearch }) {
 
-  const deleteTodo = async(id)=>{
-    await api.delete(`/todos/${id}`);
-    fetchTodos();
-  };
+    
+    const [message, setMessage] = useState("")
 
-  const editTodo = async(todo)=>{
+    const searchTodo = async () => {
+        fetchTodos(1, 5, search);
+    };
 
-const updatedTitle = prompt(
-"Edit Todo",
-todo.title
-);
+    const deleteTodo = async (id) => {
 
-if(updatedTitle){
+        try{
 
-await api.put(
-`/todos/${todo.id}`,
-{
-title:updatedTitle
-}
-);
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this todo?"
+        );
 
-fetchTodos();
+        if (!confirmDelete) return;
 
-}
+        await api.delete(`/todos/${id}`);
 
-};
+        setMessage("Todo deleted successfully");
+        console.log("message set");
 
-  const completeTodo = async(id)=>{
-    await api.patch(`/todos/${id}/complete`);
-    fetchTodos();
-  };
+        setTimeout(() => {
+            fetchTodos(1, 5, search);
+            setMessage("");
 
-  return(
-    <div>
+        }, 3000);
 
-      {todos.map((todo)=>(
+    } catch(error) {
+        console.log(error);
+    }
+    };
 
-        <div className="todo-item" key={todo.id}>
+    const editTodo = async (todo) => {
 
-          <span
-className="todo-text"
-style={{
-   textDecoration:
-   todo.completed
-   ? "line-through"
-   : "none"
-}}
->
-   {todo.title}
-</span>
+        try {
 
-<div className="button-group">
+        const updatedTitle = prompt(
+            "Edit Todo",
+            todo.title
+        );
 
-<button
-className="completeBtn"
-onClick={()=>completeTodo(todo.id)}
-> 
-Complete
-</button>
+        if (updatedTitle) {
 
-<button
-className="editBtn"
-onClick={()=>editTodo(todo)}
-> 
-Edit
-</button>
+            await api.put(
+               `/todos/${todo.id}`,
+                {
+                    title: updatedTitle
+                }
+            );
 
-<button
-className="deleteBtn"
-onClick={()=>deleteTodo(todo.id)}
-> 
-Delete
-</button>
+            fetchTodos(1, 5, search);
 
-</div>
+        }} catch(error){
+            console.log(error);
+        }
+        }
+    
+
+   const completeTodo = async (id) => {
+    try {
+        await api.patch(`/todos/${id}/complete`);
+        fetchTodos(1, 5, search);
+    }catch (error) {
+        console.log(error);
+    }
+   };
+
+    return (
+
+        <div>
+
+            {message && (<p style={{color: "green"}}>
+                {message}
+                </p>
+                )}
+
+            {/* Search UI */}
+
+            <div style={{ marginBottom: "20px" }}>
+
+                <input
+                    type="text"
+                    placeholder="Search todo..."
+                    value={search}
+                    onChange={(e)=>
+                        setSearch(e.target.value)
+                    }
+                    
+                />
+
+                <button 
+                className="searchBtn"
+                onClick={()=>fetchTodos(1,5,search)}>
+                    Search
+                </button>
+
+            </div>
+
+            {todos.length === 0 ? (
+
+                <div
+                    style={{
+                        textAlign: "center",
+                        padding: "20px"
+                    }}
+                >
+                    <h3>No Todos Found</h3>
+
+                    <p>
+                        Add a new todo to get started 
+                    </p>
+
+                </div>
+
+            ) : (
+
+                todos.map((todo) => (
+
+                    <div
+                        className="todo-item"
+                        key={todo.id}
+                    >
+
+                        <span
+                            className="todo-text"
+                            style={{
+                                textDecoration:
+                                    todo.completed
+                                        ? "line-through"
+                                        : "none"
+                            }}
+                        >
+
+                            {todo.title}
+
+                        </span>
+
+                        <div className="button-group">
+
+                            <button
+                                className="completeBtn"
+                                onClick={() =>
+                                    completeTodo(todo.id)
+                                }
+                                disabled={todo.completed}
+                            >
+                                {
+                                    todo.completed
+                                        ? "Completed"
+                                        : "Complete"
+                                }
+
+                            </button>
+
+                                                    <button
+                                className="editBtn"
+                                onClick={() => editTodo(todo)}
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                className="deleteBtn"
+                                onClick={() => deleteTodo(todo.id)}
+                            >
+                                Delete
+                            </button>
+                        </div>
+
+                    </div>
+
+                ))
+
+            )}
+
         </div>
+    );
 
-      ))}
-
-    </div>
-  );
 }
-
 export default TodoList;

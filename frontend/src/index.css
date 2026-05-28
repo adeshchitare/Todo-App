@@ -50,13 +50,28 @@ button{
 }
 
 .editBtn{
-    background:#ff9800;
-    color:white;
+    background:#ff9800 !important;
+    color:white !important; 
 }
 
 .deleteBtn{
-    background:#f44336;
+    background:#f44336 !important;
+    color:white !important;
+}
+
+.searchBtn{
+    background:#b439aa;
     color:white;
+}
+
+.pageBtn{
+    background:#100218;
+    color:white;
+}
+
+.pageBtn:disabled{
+    background:#d3d3d3;
+    cursor:not-allowed;
 }
 
 .todo-item{
