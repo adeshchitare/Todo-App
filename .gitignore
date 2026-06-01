@@ -1,0 +1,5 @@
+node_modules/
+Backend/.env
+Backend/__pycache__/
+*.pyc
+todo.db

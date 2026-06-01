@@ -1,51 +1,37 @@
-import {useState} from "react";
+import { useState } from "react";
 
-function TodoForm({addTodo}){
+function TodoForm({ addTodo }) {
+  const [title, setTitle] = useState("");
+  const [error, setError] = useState("");
 
-const [title,setTitle]=useState("");
-const [error, setError] = useState("")
+  const submit = (e) => {
+    e.preventDefault();
 
-const submit=(e)=>{
+    if (title.trim() === "") {
+      setError("Please enter todo");
 
-e.preventDefault();
+      return;
+    }
 
-if(title.trim()===""){
+    setError("");
+    addTodo(title);
+    setTitle("");
+  };
 
-setError("Please enter todo")
+  return (
+    <form onSubmit={submit}>
+      <input
+        type="text"
+        placeholder="Enter Todo"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
-return;
-}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-setError("")
-addTodo(title)
-setTitle("");
-
-};
-
-return(
-
-<form onSubmit={submit}>
-
-<input
-type="text"
-placeholder="Enter Todo"
-value={title}
-onChange={(e)=>setTitle(
-e.target.value
-)}
-/>
-
-{error && <p style={{ color: "red"}}
->{error}</p>}
-
-<button className="addBtn">
-Add
-</button>
-
-</form>
-
-);
-
+      <button className="addBtn">Add</button>
+    </form>
+  );
 }
 
 export default TodoForm;

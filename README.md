@@ -20,7 +20,7 @@ Frontend:
 Backend:
 - FastAPI
 - SQLAlchemy
-- SQLite
+- PostgreSQL
 
 ## APIs Used
 - GET /todos
