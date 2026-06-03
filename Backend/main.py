@@ -34,10 +34,61 @@ def get_db():
         db.close()
 
 
+@app.post("/register")
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+
+    existing_user = db.query(models.User).filter(
+        models.User.email == user.email
+    ).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+
+    new_user = models.User(
+        email=user.email,
+        password=user.password
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {"message": "User registered successfully"}
+
+
+@app.post("/login")
+def login(user: schemas.UserLogin,
+          db: Session = Depends(get_db)):
+
+    db_user = db.query(models.User).filter(
+        models.User.email == user.email
+    ).first()
+
+    if not db_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email"
+        )
+
+    if db_user.password != user.password:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid password"
+        )
+
+    return {
+        "message": "Login successful",
+        "user_id": db_user.id
+    }
+
 @app.post("/todos")
 def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
 
-    newTodo = models.Todo(title=todo.title)
+    newTodo = models.Todo(title=todo.title, user_id=todo.user_id)
+
 
     db.add(newTodo)
 
@@ -50,6 +101,7 @@ def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
 
 @app.get("/todos", response_model=schemas.PaginatedTodos)
 def get_todos(
+    user_id: int,
     page: int = Query(1, ge=1),
     limit: int = Query(5, ge=1),
     search: str = "",
@@ -58,7 +110,7 @@ def get_todos(
 
     skip = (page - 1) * limit
 
-    query = db.query(models.Todo)
+    query = db.query(models.Todo).filter(models.Todo.user_id == user_id)
 
     if search:
         query = query.filter(models.Todo.title.ilike(f"%{search}%"))
@@ -79,13 +131,19 @@ def get_todos(
 
 
 @app.put("/todos/{id}")
-def update_todo(id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)):
+def update_todo(id: int, user_id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)):
 
     item = db.query(models.Todo).filter(models.Todo.id == id).first()
 
     if not item:
 
         raise HTTPException(status_code=404, detail="Todo not found")
+    
+    if item.user_id != user_id:
+        raise HTTPException(
+        status_code=403,
+        detail="Forbidden"
+    )
 
     item.title = todo.title
     item.completed = todo.completed
@@ -97,11 +155,17 @@ def update_todo(id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)
 
 
 @app.patch("/todos/{id}/complete")
-def complete_todo(id: int, db: Session = Depends(get_db)):
+def complete_todo(id: int, user_id: int, db: Session = Depends(get_db)):
     item = db.query(models.Todo).filter(models.Todo.id == id).first()
 
     if not item:
         raise HTTPException(status_code=404, detail="Todo not found")
+    
+    if item.user_id != user_id:
+        raise HTTPException(
+        status_code=403,
+        detail="Forbidden"
+    )
 
     item.completed = True
 
@@ -112,13 +176,19 @@ def complete_todo(id: int, db: Session = Depends(get_db)):
 
 
 @app.delete("/todos/{id}")
-def delete_todo(id: int, db: Session = Depends(get_db)):
+def delete_todo(id: int, user_id: int, db: Session = Depends(get_db)):
 
     item = db.query(models.Todo).filter(models.Todo.id == id).first()
 
     if not item:
 
         raise HTTPException(status_code=404, detail="Todo not found")
+    
+    if item.user_id != user_id:
+        raise HTTPException(
+        status_code=403,
+        detail="Forbidden"
+    )
 
     db.delete(item)
 
