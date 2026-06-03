@@ -6,6 +6,9 @@ import TodoList from "./TodoList";
 import api from "./api";
 
 function App() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("user_id") !== null);
   const [todos, setTodos] = useState([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -19,9 +22,12 @@ function App() {
       setError("");
       setLoading(true);
 
+     
+
+     const userId = localStorage.getItem("user_id");
+
       const response = await api.get(
-        `/todos?page=${page}&limit=${limit}&search=${search}`,
-      );
+     `/todos?user_id=${userId}&page=${page}&limit=${limit}&search=${search}`);
 
       setTodos(response.data.todos);
       setTotalPages(response.data.total_pages);
